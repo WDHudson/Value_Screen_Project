@@ -7,9 +7,9 @@ from scipy import stats #The SciPy stats module
 from secrets import IEX_CLOUD_API_TOKEN
 from helpers import chunks
 
-stocks = pd.read_csv('sp_500_stocks.csv')
-
 portfolio_value = 1000000
+
+stocks = pd.read_csv('sp_500_stocks.csv')
 symbol_group = list(chunks(stocks['Ticker'], 100))
 symbol_list = []
 for i in range(0, len(symbol_group)):
@@ -36,4 +36,14 @@ for item in symbol_list:
       ignore_index = True
     )
 
+# Sort by P/E
+value_dataframe.sort_values('P/E Ratio', inplace = True)
+# Remove the companies with negative P/E ratios
+value_dataframe = value_dataframe[value_dataframe['P/E Ratio'] > 0]
+# Just use the top 50
+value_dataframe = value_dataframe[:50]
+# Reset the index
+value_dataframe.reset_index(inplace = True)
+# Drop the old index
+value_dataframe.drop('index', axis=1, inplace = True)
 print(value_dataframe)
