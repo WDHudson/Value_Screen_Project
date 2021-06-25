@@ -46,4 +46,11 @@ value_dataframe = value_dataframe[:50]
 value_dataframe.reset_index(inplace = True)
 # Drop the old index
 value_dataframe.drop('index', axis=1, inplace = True)
+
+# Calculate the number of shares to buy
+number_of_holdings = len(value_dataframe.index)
+amount_per_holding = portfolio_value / number_of_holdings
+for i in range(0, number_of_holdings):
+  price = value_dataframe.loc[i, 'Price']
+  value_dataframe.loc[i, 'Number of Shares to Buy'] = math.floor(amount_per_holding / price)
 print(value_dataframe)
