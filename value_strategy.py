@@ -6,7 +6,7 @@ import math #The Python math module
 from scipy import stats #The SciPy stats module
 from secrets import IEX_CLOUD_API_TOKEN
 from helpers import chunks
-
+from statistics import mean
 portfolio_value = 1000000
 
 stocks = pd.read_csv('sp_500_stocks.csv')
@@ -53,16 +53,12 @@ for item in symbol_list:
       ignore_index = True
     )
 
-# Sort by P/E
-value_dataframe.sort_values('P/E Ratio', inplace = True)
 # Remove the companies with negative P/E ratios
 value_dataframe = value_dataframe[value_dataframe['P/E Ratio'] > 0]
 # Remove the companies with negative P/B ratios
 value_dataframe = value_dataframe[value_dataframe['P/B Ratio'] > 0]
 # Remove the companies with negative P/S ratios
 value_dataframe = value_dataframe[value_dataframe['P/S Ratio'] > 0]
-# Just use the top 50
-value_dataframe = value_dataframe[:50]
 # Reset the index
 value_dataframe.reset_index(inplace = True)
 # Drop the old index
@@ -89,4 +85,22 @@ percentile_columns = {
 for row in value_dataframe.index:
   for column in percentile_columns.keys():
     value_dataframe.loc[row, percentile_columns[column]] = stats.percentileofscore(value_dataframe[column], value_dataframe.loc[row, column])
+
+# Fill in the Relative Value Score
+for row in value_dataframe.index:
+  # Make a list of percentile scores
+  percentiles = []
+  # Loop through column by column
+  for column in percentile_columns.keys():
+    percentiles.append(value_dataframe.loc[row, percentile_columns[column]])
+    value_dataframe.loc[row, 'RV Score'] = mean(percentiles)
+# Sort by P/E
+value_dataframe.sort_values('RV Score', inplace = True)
+# Just use the top 50
+value_dataframe = value_dataframe[:50]
+# Reset the index
+value_dataframe.reset_index(inplace = True)
+# Drop the old index
+value_dataframe.drop('index', axis=1, inplace = True)
+
 print(value_dataframe)
