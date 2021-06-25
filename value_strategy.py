@@ -15,12 +15,22 @@ symbol_list = []
 for i in range(0, len(symbol_group)):
   symbol_list.append(','.join(symbol_group[i]))
 
-my_columns = ['Ticker', 'Price', 'P/E Ratio', 'Number of Shares to Buy']
+my_columns = [
+  'Ticker',
+  'Price',
+  'P/E Ratio',
+  'P/E Percentile',
+  'P/B Ratio',
+  'P/B Percentile',
+  'P/S Ratio',
+  'P/S Percentile',
+  'Number of Shares to Buy'
+  ]
 
 value_dataframe = pd.DataFrame(columns = my_columns)
 
 for item in symbol_list:
-  batch_api_data = f'https://sandbox.iexapis.com/stable/stock/market/batch/?types=stats,quote&symbols={item}&token={IEX_CLOUD_API_TOKEN}'
+  batch_api_data = f'https://sandbox.iexapis.com/stable/stock/market/batch/?types=advanced-stats,quote&symbols={item}&token={IEX_CLOUD_API_TOKEN}'
   data = requests.get(batch_api_data).json()
   for ticker in item.split(','):
     value_dataframe = value_dataframe.append(
@@ -28,7 +38,12 @@ for item in symbol_list:
         [
           ticker,
           data[ticker]['quote']['latestPrice'],
-          data[ticker]['stats']['peRatio'],
+          data[ticker]['quote']['peRatio'],
+          'N/A',
+          data[ticker]['advanced-stats']['priceToBook'],
+          'N/A',
+          data[ticker]['advanced-stats']['priceToSales'],
+          'N/A',
           'N/A'
         ],
         index = my_columns
