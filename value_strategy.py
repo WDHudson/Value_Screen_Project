@@ -24,6 +24,7 @@ my_columns = [
   'P/B Percentile',
   'P/S Ratio',
   'P/S Percentile',
+  'RV Score',
   'Number of Shares to Buy'
   ]
 
@@ -44,6 +45,7 @@ for item in symbol_list:
           'N/A',
           data[ticker]['advanced-stats']['priceToSales'],
           'N/A',
+          'N/A',
           'N/A'
         ],
         index = my_columns
@@ -55,6 +57,10 @@ for item in symbol_list:
 value_dataframe.sort_values('P/E Ratio', inplace = True)
 # Remove the companies with negative P/E ratios
 value_dataframe = value_dataframe[value_dataframe['P/E Ratio'] > 0]
+# Remove the companies with negative P/B ratios
+value_dataframe = value_dataframe[value_dataframe['P/B Ratio'] > 0]
+# Remove the companies with negative P/S ratios
+value_dataframe = value_dataframe[value_dataframe['P/S Ratio'] > 0]
 # Just use the top 50
 value_dataframe = value_dataframe[:50]
 # Reset the index
@@ -68,4 +74,19 @@ amount_per_holding = portfolio_value / number_of_holdings
 for i in range(0, number_of_holdings):
   price = value_dataframe.loc[i, 'Price']
   value_dataframe.loc[i, 'Number of Shares to Buy'] = math.floor(amount_per_holding / price)
+
+# Replace missing data with the average
+columns_to_check = ['P/E Ratio', 'P/B Ratio', 'P/S Ratio']
+for column in columns_to_check:
+  value_dataframe[column].fillna(value_dataframe[column].mean(), inplace = True)
+
+# Calculate the percentile rank and fill in dataframe
+percentile_columns = {
+  'P/E Ratio': 'P/E Percentile',
+  'P/B Ratio': 'P/B Percentile',
+  'P/S Ratio': 'P/S Percentile'
+}
+for row in value_dataframe.index:
+  for column in percentile_columns.keys():
+    value_dataframe.loc[row, percentile_columns[column]] = stats.percentileofscore(value_dataframe[column], value_dataframe.loc[row, column])
 print(value_dataframe)
